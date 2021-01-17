@@ -1,10 +1,11 @@
 import logging
 import time
+import os
 
 import requests
 from pprint import pprint
 
-
+telegram_token = os.getenv('TELEGRAN_TOKEN')
 
 # add filemode="w" to overwrite
 logging.basicConfig(level=logging.DEBUG)
