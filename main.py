@@ -1,11 +1,10 @@
 import logging
-import time
 import os
+import time
 
 import requests
-from pprint import pprint
-from dotenv import load_dotenv
 import telegram
+from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -14,16 +13,6 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 DEVMAN_TOKEN = os.getenv('DEVMAN_TOKEN')
 BOT = telegram.Bot(token=TELEGRAM_TOKEN)
-
-
-def get_checks(token):
-    headers = {
-        'Authorization': f'Token {token}'
-    }
-    response = requests.get('https://dvmn.org/api/user_reviews/', headers=headers)
-    response.raise_for_status()
-    answ = response.json()
-    pprint(answ)
 
 
 def long_pooling_check(token):
