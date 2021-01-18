@@ -6,7 +6,7 @@ import requests
 import telegram
 from dotenv import load_dotenv
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
@@ -31,9 +31,10 @@ def long_pooling_check(token):
             if response_result['status'] == 'timeout':
                 params['timestamp'] = response_result['timestamp_to_request']
             elif response_result['status'] == 'found':
-                lesson_title = response_result['new_attempts'][0]['lesson_title']
-                lesson_url = response_result['new_attempts'][0]['lesson_url']
-                if response_result['new_attempts'][0]['is_negative']:
+                solution_attempts = response_result['new_attempts'][0]
+                lesson_title = solution_attempts['lesson_title']
+                lesson_url = solution_attempts['lesson_url']
+                if solution_attempts['is_negative']:
                     next_step = 'Необходимо доработать решение.'
                 else:
                     next_step = 'Решение принято. Можно приступать к следующему уроку!'
