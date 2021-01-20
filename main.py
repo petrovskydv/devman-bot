@@ -38,11 +38,8 @@ def long_pooling_check(token):
                 BOT.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
                 params['timestamp'] = decoded_response_body['last_attempt_timestamp']
         except requests.exceptions.ReadTimeout:
-            print("\n Переподключение к серверу \n")
             logging.info("Переподключение к серверу")
-            time.sleep(5)
         except requests.exceptions.ConnectionError:
-            print("\n Потеря связи \n")
             logging.info("Потеря связи")
             time.sleep(5)
 
