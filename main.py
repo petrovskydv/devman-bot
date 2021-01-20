@@ -6,13 +6,7 @@ import requests
 import telegram
 from dotenv import load_dotenv
 
-logging.basicConfig(level=logging.INFO)
-
-load_dotenv()
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-DEVMAN_TOKEN = os.getenv('DEVMAN_TOKEN')
-BOT = telegram.Bot(token=TELEGRAM_TOKEN)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(process)d %(levelname)s %(message)s")
 
 
 def long_pooling_check(token):
@@ -27,27 +21,37 @@ def long_pooling_check(token):
         try:
             response = requests.get('https://dvmn.org/api/long_polling/', headers=headers, params=params)
             response.raise_for_status()
-            response_result = response.json()
-            if response_result['status'] == 'timeout':
-                params['timestamp'] = response_result['timestamp_to_request']
-            elif response_result['status'] == 'found':
-                solution_attempts = response_result['new_attempts'][0]
-                lesson_title = solution_attempts['lesson_title']
-                lesson_url = solution_attempts['lesson_url']
-                if solution_attempts['is_negative']:
+            decoded_response_body = response.json()
+            if decoded_response_body['status'] == 'timeout':
+                logging.info('Получен пустой ответ')
+                params['timestamp'] = decoded_response_body['timestamp_to_request']
+            elif decoded_response_body['status'] == 'found':
+                logging.info('Получен ответ на задачу')
+                solution_attempt = decoded_response_body['new_attempts'][0]
+                lesson_title = solution_attempt['lesson_title']
+                lesson_url = solution_attempt['lesson_url']
+                if solution_attempt['is_negative']:
                     next_step = 'Необходимо доработать решение.'
                 else:
                     next_step = 'Решение принято. Можно приступать к следующему уроку!'
                 message = f'Проверена работа "{lesson_title}"\nhttps://dvmn.org{lesson_url}\n{next_step}'
                 BOT.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
-                params['timestamp'] = response_result['last_attempt_timestamp']
+                params['timestamp'] = decoded_response_body['last_attempt_timestamp']
         except requests.exceptions.ReadTimeout:
             print("\n Переподключение к серверу \n")
+            logging.info("Переподключение к серверу")
             time.sleep(5)
         except requests.exceptions.ConnectionError:
             print("\n Потеря связи \n")
+            logging.info("Потеря связи")
             time.sleep(5)
 
 
 if __name__ == '__main__':
+    load_dotenv()
+    TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+    TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+    DEVMAN_TOKEN = os.getenv('DEVMAN_TOKEN')
+    BOT = telegram.Bot(token=TELEGRAM_TOKEN)
+
     long_pooling_check(DEVMAN_TOKEN)
