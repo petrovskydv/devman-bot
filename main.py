@@ -6,7 +6,7 @@ import requests
 import telegram
 from dotenv import load_dotenv
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def long_pooling_check(token):
@@ -21,13 +21,13 @@ def long_pooling_check(token):
         try:
             response = requests.get('https://dvmn.org/api/long_polling/', headers=headers, params=params)
             response.raise_for_status()
-            decoded_response_body = response.json()
-            if decoded_response_body['status'] == 'timeout':
+            review_result = response.json()
+            if review_result['status'] == 'timeout':
                 logger.info('Получен пустой ответ')
-                params['timestamp'] = decoded_response_body['timestamp_to_request']
-            elif decoded_response_body['status'] == 'found':
+                params['timestamp'] = review_result['timestamp_to_request']
+            elif review_result['status'] == 'found':
                 logger.info('Получен ответ на задачу')
-                solution_attempt = decoded_response_body['new_attempts'][0]
+                solution_attempt = review_result['new_attempts'][0]
                 lesson_title = solution_attempt['lesson_title']
                 lesson_url = solution_attempt['lesson_url']
                 if solution_attempt['is_negative']:
@@ -36,7 +36,7 @@ def long_pooling_check(token):
                     next_step = 'Решение принято. Можно приступать к следующему уроку!'
                 message = f'Проверена работа "{lesson_title}"\nhttps://dvmn.org{lesson_url}\n{next_step}'
                 BOT.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
-                params['timestamp'] = decoded_response_body['last_attempt_timestamp']
+                params['timestamp'] = review_result['last_attempt_timestamp']
         except requests.exceptions.ReadTimeout:
             logger.info("Переподключение к серверу")
         except requests.exceptions.ConnectionError:
@@ -45,15 +45,9 @@ def long_pooling_check(token):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.ERROR)
-
+    logging.basicConfig(level=logging.ERROR, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     logger.setLevel(logging.INFO)
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
-    logger.info('проверка сообщений')
+    logger.info('Бот запущен')
 
     load_dotenv()
     TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
