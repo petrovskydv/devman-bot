@@ -6,7 +6,7 @@ import requests
 import telegram
 from dotenv import load_dotenv
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(process)d %(levelname)s %(message)s")
+logger = logging.getLogger(__file__)
 
 
 def long_pooling_check(token):
@@ -23,10 +23,10 @@ def long_pooling_check(token):
             response.raise_for_status()
             decoded_response_body = response.json()
             if decoded_response_body['status'] == 'timeout':
-                logging.info('Получен пустой ответ')
+                logger.info('Получен пустой ответ')
                 params['timestamp'] = decoded_response_body['timestamp_to_request']
             elif decoded_response_body['status'] == 'found':
-                logging.info('Получен ответ на задачу')
+                logger.info('Получен ответ на задачу')
                 solution_attempt = decoded_response_body['new_attempts'][0]
                 lesson_title = solution_attempt['lesson_title']
                 lesson_url = solution_attempt['lesson_url']
@@ -38,13 +38,23 @@ def long_pooling_check(token):
                 BOT.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
                 params['timestamp'] = decoded_response_body['last_attempt_timestamp']
         except requests.exceptions.ReadTimeout:
-            logging.info("Переподключение к серверу")
+            logger.info("Переподключение к серверу")
         except requests.exceptions.ConnectionError:
-            logging.info("Потеря связи")
+            logger.info("Потеря связи")
             time.sleep(5)
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.ERROR)
+
+    logger.setLevel(logging.INFO)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+    logger.info('проверка сообщений')
+
     load_dotenv()
     TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
     TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
