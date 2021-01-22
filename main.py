@@ -50,9 +50,9 @@ if __name__ == '__main__':
     logger.info('Бот запущен')
 
     load_dotenv()
-    TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-    TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-    DEVMAN_TOKEN = os.getenv('DEVMAN_TOKEN')
+    TELEGRAM_TOKEN = os.environ('TELEGRAM_TOKEN')
+    TELEGRAM_CHAT_ID = os.environ('TELEGRAM_CHAT_ID')
+    DEVMAN_TOKEN = os.environ('DEVMAN_TOKEN')
     BOT = telegram.Bot(token=TELEGRAM_TOKEN)
 
     long_pooling_check(DEVMAN_TOKEN)
