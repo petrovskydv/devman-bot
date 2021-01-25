@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from logging import Handler, LogRecord
 
 import requests
 import telegram
@@ -9,6 +10,21 @@ from dotenv import load_dotenv
 logger = logging.getLogger(__name__)
 
 
+class TelegramBotHandler(Handler):
+    def __init__(self, token: str, chat_id: str):
+        super().__init__()
+        self.token = token
+        self.chat_id = chat_id
+
+    def emit(self, record: LogRecord):
+        logger_bot = telegram.Bot(token=TELEGRAM_TOKEN)
+        logger_bot.send_message(
+            self.chat_id,
+            self.format(record)
+        )
+
+
+# noinspection PyBroadException
 def long_pooling_check(token):
     headers = {
         'Authorization': f'Token {token}'
@@ -42,17 +58,24 @@ def long_pooling_check(token):
         except requests.exceptions.ConnectionError:
             logger.info("Потеря связи")
             time.sleep(5)
+        except Exception:
+            logger.exception('Error')
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.ERROR, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     logger.setLevel(logging.INFO)
-    logger.info('Бот запущен')
 
     load_dotenv()
     TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
     TELEGRAM_CHAT_ID = os.environ['TELEGRAM_CHAT_ID']
     DEVMAN_TOKEN = os.environ['DEVMAN_TOKEN']
+
+    logger_handler = TelegramBotHandler(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID)
+    logger_handler.formatter = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
+    logger.addHandler(logger_handler)
+    logger.info('Бот запущен')
+
     BOT = telegram.Bot(token=TELEGRAM_TOKEN)
 
     long_pooling_check(DEVMAN_TOKEN)
