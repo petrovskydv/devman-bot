@@ -64,7 +64,7 @@ def long_pooling_check(token):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.ERROR, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     load_dotenv()
     TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
@@ -72,6 +72,7 @@ if __name__ == '__main__':
     DEVMAN_TOKEN = os.environ['DEVMAN_TOKEN']
 
     logger_handler = TelegramBotHandler(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID)
+    logger_handler.setLevel(logging.INFO)
     logger_handler.formatter = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
     logger.addHandler(logger_handler)
     logger.info('Бот запущен')
