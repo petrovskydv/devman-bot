@@ -39,10 +39,10 @@ def long_pooling_check(token):
             response.raise_for_status()
             review_result = response.json()
             if review_result['status'] == 'timeout':
-                logger.info('Получен пустой ответ')
+                logger.debug('Получен пустой ответ')
                 params['timestamp'] = review_result['timestamp_to_request']
             elif review_result['status'] == 'found':
-                logger.info('Получен ответ на задачу')
+                logger.debug('Получен ответ на задачу')
                 solution_attempt = review_result['new_attempts'][0]
                 lesson_title = solution_attempt['lesson_title']
                 lesson_url = solution_attempt['lesson_url']
