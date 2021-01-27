@@ -17,7 +17,7 @@ class TelegramBotHandler(Handler):
         self.chat_id = chat_id
 
     def emit(self, record: LogRecord):
-        logger_bot = telegram.Bot(token=TELEGRAM_TOKEN)
+        logger_bot = telegram.Bot(token=self.token)
         logger_bot.send_message(
             self.chat_id,
             self.format(record)
@@ -25,9 +25,9 @@ class TelegramBotHandler(Handler):
 
 
 # noinspection PyBroadException
-def long_pooling_check(token):
+def long_pooling_check(devman_token, telegram_bot, telegram_chat_id):
     headers = {
-        'Authorization': f'Token {token}'
+        'Authorization': f'Token {devman_token}'
     }
     params = {
         'timestamp': ''
@@ -51,7 +51,7 @@ def long_pooling_check(token):
                 else:
                     next_step = 'Решение принято. Можно приступать к следующему уроку!'
                 message = f'Проверена работа "{lesson_title}"\nhttps://dvmn.org{lesson_url}\n{next_step}'
-                BOT.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+                telegram_bot.send_message(chat_id=telegram_chat_id, text=message)
                 params['timestamp'] = review_result['last_attempt_timestamp']
         except requests.exceptions.ReadTimeout:
             logger.info("Переподключение к серверу")
@@ -62,21 +62,24 @@ def long_pooling_check(token):
             logger.exception('Error')
 
 
-if __name__ == '__main__':
+def main():
     logging.basicConfig(level=logging.ERROR, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     logger.setLevel(logging.DEBUG)
 
     load_dotenv()
-    TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
-    TELEGRAM_CHAT_ID = os.environ['TELEGRAM_CHAT_ID']
-    DEVMAN_TOKEN = os.environ['DEVMAN_TOKEN']
+    telegram_token = os.environ['TELEGRAM_TOKEN']
+    telegram_chat_id = os.environ['TELEGRAM_CHAT_ID']
+    devman_token = os.environ['DEVMAN_TOKEN']
 
-    logger_handler = TelegramBotHandler(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID)
+    logger_handler = TelegramBotHandler(telegram_token, telegram_chat_id)
     logger_handler.setLevel(logging.INFO)
     logger_handler.formatter = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
     logger.addHandler(logger_handler)
+
     logger.info('Бот запущен')
+    telegram_bot = telegram.Bot(token=telegram_token)
+    long_pooling_check(devman_token, telegram_bot, telegram_chat_id)
 
-    BOT = telegram.Bot(token=TELEGRAM_TOKEN)
 
-    long_pooling_check(DEVMAN_TOKEN)
+if __name__ == '__main__':
+    main()
