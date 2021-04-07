@@ -54,10 +54,12 @@ def long_pooling_check(devman_token, telegram_bot, telegram_chat_id):
                 telegram_bot.send_message(chat_id=telegram_chat_id, text=message)
                 params['timestamp'] = review_result['last_attempt_timestamp']
         except requests.exceptions.ReadTimeout:
-            logger.info("Переподключение к серверу")
+            logger.info('Переподключение к серверу')
         except requests.exceptions.ConnectionError:
-            logger.info("Потеря связи")
+            logger.info('Потеря связи')
             time.sleep(5)
+        except requests.exceptions.HTTPError:
+            logger.info('ошибка HTTP')
         except Exception:
             logger.exception('Error')
 
@@ -72,7 +74,7 @@ def main():
     devman_token = os.environ['DEVMAN_TOKEN']
 
     logger_handler = TelegramBotHandler(telegram_token, telegram_chat_id)
-    logger_handler.setLevel(logging.INFO)
+    logger_handler.setLevel(logging.ERROR)
     logger_handler.formatter = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
     logger.addHandler(logger_handler)
 
